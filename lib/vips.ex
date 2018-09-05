@@ -13,4 +13,8 @@ defmodule Vips do
   def thumbnail(_from, _to, _width, _height) do
     raise "NIF thumbnail/4 not implemented"
   end
+
+  def get_headers(_from) do
+    raise "NIF get_headers/1 not implemented"
+  end
 end
