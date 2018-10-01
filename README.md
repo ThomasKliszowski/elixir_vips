@@ -2,6 +2,13 @@
 
 **TODO: Add description**
 
+## Resources
+
+- https://jcupitt.github.io/libvips/API/current/
+- https://www.cs.mcgill.ca/~mxia3/2017/06/18/tutorial-extending-elixir-with-c-using-NIF/
+- http://erlang.org/doc/man/erl_nif.html
+- https://medium.com/@jlouis666/erlang-dirty-scheduler-overhead-6e1219dcc7
+
 ## Dependencies
 
 Make sure to install **libvips** before.
