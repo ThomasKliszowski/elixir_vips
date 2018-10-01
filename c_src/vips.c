@@ -126,60 +126,36 @@ thumbnail(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
   int width = from_elixir_int(env, argv[2]);
   int height = from_elixir_int(env, argv[3]);
 
-  // Check if dirty schedulers are enabled
-  ErlNifSysInfo sys_info;
-  enif_system_info(&sys_info, sizeof(ErlNifSysInfo));
-  if (!sys_info.smp_support || !sys_info.dirty_scheduler_support)
-  {
-    return enif_make_tuple2(
-        env,
-        enif_make_atom(env, "error"),
-        enif_make_atom(env, "dirty_schedulers_not_enabled"));
-  }
-  enif_release_resource(&sys_info);
+  VipsImage *in = NULL;
+  VipsImage *out = NULL;
+  ERL_NIF_TERM res;
 
-  // Check if `from_path` is an existing path
-  if (access(from_path, F_OK) == -1)
-  {
-    return enif_make_tuple2(
-        env,
-        enif_make_atom(env, "error"),
-        enif_make_atom(env, "input_not_found"));
-  }
+  if (assert_dirty_schedulers(env, &res))
+    if (assert_file_exists(env, from_path, &res))
+      if (load_vips_image(env, from_path, &in, &res))
+      {
+        if (vips_thumbnail_image(in, &out, width, "height", height, NULL))
+        {
+          res = elixir_vips_error(env, "thumbnail_image_failed", NULL);
+        }
+        else
+        {
+          if (vips_image_write_to_file(out, to_path, NULL))
+          {
+            res = elixir_vips_error(env, "write_to_file_failed", NULL);
+          }
+          else
+          {
+            res = enif_make_atom(env, "ok");
+          }
+          g_object_unref(out);
+        }
+        g_object_unref(in);
+      }
 
-  ERL_NIF_TERM result;
-
-  // Create thumbnail and write it to `to_path`
-  VipsImage *image;
-  if (vips_thumbnail(from_path, &image, width, "height", height, NULL))
-  {
-    result = enif_make_tuple2(
-        env,
-        enif_make_atom(env, "error"),
-        enif_make_atom(env, "vips_internal_error"));
-  }
-  else
-  {
-    if (vips_image_write_to_file(image, to_path, NULL))
-    {
-      result = enif_make_tuple2(
-          env,
-          enif_make_atom(env, "error"),
-          enif_make_atom(env, "vips_internal_error"));
-    }
-    else
-    {
-      result = enif_make_atom(env, "ok");
-    }
-    g_object_unref(image);
-  }
-
-  // Cleanup
   g_free(from_path);
   g_free(to_path);
-  vips_error_clear();
-
-  return result;
+  return res;
 }
 
 // ----------------------------------------------------------------------------
@@ -187,27 +163,29 @@ thumbnail(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 static ERL_NIF_TERM
 get_headers(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
-
   char *path = from_elixir_string(env, argv[0]);
-  VipsImage *image;
-  ERL_NIF_TERM err;
+  VipsImage *image = NULL;
+  ERL_NIF_TERM res;
 
-  if (!load_vips_image(env, path, &image, &err))
-    return err;
+  if (load_vips_image(env, path, &image, &res))
+  {
+    int width = vips_image_get_width(image);
+    int height = vips_image_get_height(image);
 
-  int width = vips_image_get_width(image);
-  int height = vips_image_get_height(image);
+    ERL_NIF_TERM stats = enif_make_new_map(env);
+    enif_make_map_put(env, stats, enif_make_atom(env, "width"), enif_make_int(env, width), &stats);
+    enif_make_map_put(env, stats, enif_make_atom(env, "height"), enif_make_int(env, height), &stats);
 
-  g_object_unref(image);
+    g_object_unref(image);
 
-  ERL_NIF_TERM stats = enif_make_new_map(env);
-  enif_make_map_put(env, stats, enif_make_atom(env, "width"), enif_make_int(env, width), &stats);
-  enif_make_map_put(env, stats, enif_make_atom(env, "height"), enif_make_int(env, height), &stats);
+    res = enif_make_tuple2(
+        env,
+        enif_make_atom(env, "ok"),
+        stats);
+  }
 
-  return enif_make_tuple2(
-      env,
-      enif_make_atom(env, "ok"),
-      stats);
+  g_free(path);
+  return res;
 }
 
 // ----------------------------------------------------------------------------

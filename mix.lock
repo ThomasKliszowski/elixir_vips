@@ -1,3 +1,6 @@
 %{
+  "briefly": {:hex, :briefly, "0.3.0", "16e6b76d2070ebc9cbd025fa85cf5dbaf52368c4bd896fb482b5a6b95a540c2f", [:mix], [], "hexpm"},
   "elixir_make": {:hex, :elixir_make, "0.4.2", "332c649d08c18bc1ecc73b1befc68c647136de4f340b548844efc796405743bf", [:mix], [], "hexpm"},
+  "meck": {:hex, :meck, "0.8.12", "1f7b1a9f5d12c511848fec26bbefd09a21e1432eadb8982d9a8aceb9891a3cf2", [:rebar3], [], "hexpm"},
+  "mock": {:hex, :mock, "0.3.2", "e98e998fd76c191c7e1a9557c8617912c53df3d4a6132f561eb762b699ef59fa", [:mix], [{:meck, "~> 0.8.8", [hex: :meck, repo: "hexpm", optional: false]}], "hexpm"},
 }
