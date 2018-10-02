@@ -176,12 +176,68 @@ get_headers(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
     enif_make_map_put(env, stats, enif_make_atom(env, "width"), enif_make_int(env, width), &stats);
     enif_make_map_put(env, stats, enif_make_atom(env, "height"), enif_make_int(env, height), &stats);
 
-    g_object_unref(image);
-
     res = enif_make_tuple2(
         env,
         enif_make_atom(env, "ok"),
         stats);
+
+    g_object_unref(image);
+  }
+
+  g_free(path);
+  return res;
+}
+
+// ----------------------------------------------------------------------------
+
+static double get_stats_point(VipsImage *stats, int x, int y)
+{
+  double value;
+  double *vector;
+  int l;
+  vips_getpoint(stats, &vector, &l, x, y, NULL);
+  value = vector[0];
+  g_free(vector);
+  return value;
+}
+
+static ERL_NIF_TERM
+get_avg_color(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+  char *path = from_elixir_string(env, argv[0]);
+  VipsImage *image = NULL;
+  ERL_NIF_TERM res;
+
+  if (load_vips_image(env, path, &image, &res))
+  {
+    VipsImage *stats;
+    vips_stats(image, &stats, NULL);
+
+    if (stats->Ysize < 4 || stats->Ysize > 5)
+    {
+      res = elixir_vips_error(env, "bad_input", fmt("Unsupported number of bands for file `%s`", path));
+    }
+    else
+    {
+      double alpha = 255;
+      if (stats->Ysize == 5)
+      {
+        alpha = get_stats_point(stats, 4, 4);
+      }
+
+      res = enif_make_tuple2(
+          env,
+          enif_make_atom(env, "ok"),
+          enif_make_tuple4(
+              env,
+              enif_make_double(env, get_stats_point(stats, 4, 1)), // avg red
+              enif_make_double(env, get_stats_point(stats, 4, 2)), // avg green
+              enif_make_double(env, get_stats_point(stats, 4, 3)), // avg blue
+              enif_make_double(env, alpha)));
+    }
+
+    g_object_unref(stats);
+    g_object_unref(image);
   }
 
   g_free(path);
@@ -193,6 +249,7 @@ get_headers(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 static ErlNifFunc funcs[] = {
     {"thumbnail", 4, thumbnail, ERL_NIF_DIRTY_JOB_CPU_BOUND},
     {"get_headers", 1, get_headers, ERL_NIF_DIRTY_JOB_IO_BOUND},
+    {"get_avg_color", 1, get_avg_color, ERL_NIF_DIRTY_JOB_IO_BOUND},
 };
 
 // ----------------------------------------------------------------------------

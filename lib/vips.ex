@@ -17,4 +17,8 @@ defmodule Vips do
   def get_headers(_from) do
     raise "NIF get_headers/1 not implemented"
   end
+
+  def get_avg_color(_from) do
+    raise "NIF get_avg_color/1 not implemented"
+  end
 end
