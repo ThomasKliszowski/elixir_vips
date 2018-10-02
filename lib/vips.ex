@@ -21,4 +21,8 @@ defmodule Vips do
   def get_avg_color(_from) do
     raise "NIF get_avg_color/1 not implemented"
   end
+
+  def get_poi(_from) do
+    raise "NIF get_poi/1 not implemented"
+  end
 end

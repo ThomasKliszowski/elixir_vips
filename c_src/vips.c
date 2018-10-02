@@ -246,10 +246,51 @@ get_avg_color(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
 // ----------------------------------------------------------------------------
 
+static ERL_NIF_TERM
+get_poi(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+  char *from_path = from_elixir_string(env, argv[0]);
+
+  VipsImage *in = NULL;
+  VipsImage *out = NULL;
+  ERL_NIF_TERM res;
+
+  if (assert_dirty_schedulers(env, &res))
+  {
+    if (load_vips_image(env, from_path, &in, &res))
+    {
+      int target_size = (in->Xsize > in->Ysize ? in->Ysize : in->Xsize) * 0.8;
+      if (vips_smartcrop(in, &out, target_size, target_size, "interesting", VIPS_INTERESTING_ENTROPY, NULL))
+      {
+        res = elixir_vips_error(env, "smartcrop_failed", NULL);
+      }
+      else
+      {
+        res = enif_make_tuple2(
+            env,
+            enif_make_atom(env, "ok"),
+            enif_make_tuple2(
+                env,
+                enif_make_int(env, -out->Xoffset + (out->Xsize / 2)),
+                enif_make_int(env, -out->Yoffset + (out->Ysize / 2))));
+
+        g_object_unref(out);
+      }
+      g_object_unref(in);
+    }
+  }
+
+  g_free(from_path);
+  return res;
+}
+
+// ----------------------------------------------------------------------------
+
 static ErlNifFunc funcs[] = {
     {"thumbnail", 4, thumbnail, ERL_NIF_DIRTY_JOB_CPU_BOUND},
     {"get_headers", 1, get_headers, ERL_NIF_DIRTY_JOB_IO_BOUND},
     {"get_avg_color", 1, get_avg_color, ERL_NIF_DIRTY_JOB_IO_BOUND},
+    {"get_poi", 1, get_poi, ERL_NIF_DIRTY_JOB_CPU_BOUND},
 };
 
 // ----------------------------------------------------------------------------
