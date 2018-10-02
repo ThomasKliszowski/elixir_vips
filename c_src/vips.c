@@ -131,27 +131,26 @@ thumbnail(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
   ERL_NIF_TERM res;
 
   if (assert_dirty_schedulers(env, &res))
-    if (assert_file_exists(env, from_path, &res))
-      if (load_vips_image(env, from_path, &in, &res))
+    if (load_vips_image(env, from_path, &in, &res))
+    {
+      if (vips_thumbnail_image(in, &out, width, "height", height, NULL))
       {
-        if (vips_thumbnail_image(in, &out, width, "height", height, NULL))
+        res = elixir_vips_error(env, "thumbnail_image_failed", NULL);
+      }
+      else
+      {
+        if (vips_image_write_to_file(out, to_path, NULL))
         {
-          res = elixir_vips_error(env, "thumbnail_image_failed", NULL);
+          res = elixir_vips_error(env, "write_to_file_failed", NULL);
         }
         else
         {
-          if (vips_image_write_to_file(out, to_path, NULL))
-          {
-            res = elixir_vips_error(env, "write_to_file_failed", NULL);
-          }
-          else
-          {
-            res = enif_make_atom(env, "ok");
-          }
-          g_object_unref(out);
+          res = enif_make_atom(env, "ok");
         }
-        g_object_unref(in);
+        g_object_unref(out);
       }
+      g_object_unref(in);
+    }
 
   g_free(from_path);
   g_free(to_path);
@@ -256,7 +255,6 @@ get_poi(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
   ERL_NIF_TERM res;
 
   if (assert_dirty_schedulers(env, &res))
-  {
     if (load_vips_image(env, from_path, &in, &res))
     {
       int target_size = (in->Xsize > in->Ysize ? in->Ysize : in->Xsize) * 0.8;
@@ -278,7 +276,6 @@ get_poi(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
       }
       g_object_unref(in);
     }
-  }
 
   g_free(from_path);
   return res;
