@@ -2,6 +2,7 @@
 #include "vips/vips.h"
 #include "unistd.h"
 #include <stdio.h>
+#include <string.h>
 
 // ----------------------------------------------------------------------------
 
@@ -89,7 +90,8 @@ assert_dirty_schedulers(ErlNifEnv *env, ERL_NIF_TERM *err)
 static int
 assert_file_exists(ErlNifEnv *env, const char *path, ERL_NIF_TERM *err)
 {
-  if (access(path, F_OK) == -1)
+  char *safe_path = strtok(strdup(path), "[");
+  if (access(safe_path, F_OK) == -1)
   {
     *err = elixir_vips_error(
         env,

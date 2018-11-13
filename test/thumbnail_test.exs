@@ -41,4 +41,12 @@ defmodule Vips.ThumbnailTest do
     res = Vips.get_headers(to_path)
     assert {:ok, %{height: 66, width: 100}} = res
   end
+
+  test "svg" do
+    from_path = Path.join([:code.priv_dir(:vips), "test_medias", "shopping-cart.svg[scale=2.25]"])
+
+    to_path = Briefly.create!(extname: ".png")
+    res = Vips.thumbnail(from_path, to_path, 100, 100)
+    assert res == :ok
+  end
 end
