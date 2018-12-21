@@ -207,19 +207,23 @@ get_avg_color(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
   char *path = from_elixir_string(env, argv[0]);
   VipsImage *image = NULL;
+
   ERL_NIF_TERM res;
 
   if (load_vips_image(env, path, &image, &res))
   {
-    VipsImage *stats;
-    vips_stats(image, &stats, NULL);
-
-    if (stats->Ysize < 4 || stats->Ysize > 5)
+    if (!vips_colourspace_issupported(image))
     {
-      res = elixir_vips_error(env, "bad_input", fmt("Unsupported number of bands for file `%s`", path));
+      res = elixir_vips_error(env, "bad_input", fmt("Unsupported colourspace for file `%s`", path));
     }
     else
     {
+      VipsImage *rgb_image;
+      vips_colourspace(image, &rgb_image, VIPS_INTERPRETATION_sRGB, NULL);
+
+      VipsImage *stats;
+      vips_stats(rgb_image, &stats, NULL);
+
       double alpha = 255;
       if (stats->Ysize == 5)
       {
@@ -235,9 +239,10 @@ get_avg_color(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
               enif_make_double(env, get_stats_point(stats, 4, 2)), // avg green
               enif_make_double(env, get_stats_point(stats, 4, 3)), // avg blue
               enif_make_double(env, alpha)));
-    }
 
-    g_object_unref(stats);
+      g_object_unref(stats);
+      g_object_unref(rgb_image);
+    }
     g_object_unref(image);
   }
 
