@@ -33,7 +33,7 @@ endif
 CFLAGS += -fPIC -I $(ERTS_INCLUDE_DIR) -I $(ERL_INTERFACE_INCLUDE_DIR) `pkg-config --cflags vips`
 CXXFLAGS += -fPIC -I $(ERTS_INCLUDE_DIR) -I $(ERL_INTERFACE_INCLUDE_DIR)
 
-LDLIBS += -L $(ERL_INTERFACE_LIB_DIR) -lerl_interface -lei `pkg-config --libs vips`
+LDLIBS += -L $(ERL_INTERFACE_LIB_DIR) -lei `pkg-config --libs vips`
 LDFLAGS += -shared
 
 # Verbosity.

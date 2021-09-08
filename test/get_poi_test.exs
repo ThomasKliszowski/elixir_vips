@@ -6,6 +6,6 @@ defmodule Vips.GetPOITest do
       Path.join([:code.priv_dir(:vips), "test_medias", "owl.jpg"])
       |> Vips.get_poi()
 
-    assert {:ok, {x, y}} = res
+    assert {:ok, {_x, _y}} = res
   end
 end

@@ -162,6 +162,36 @@ thumbnail(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 // ----------------------------------------------------------------------------
 
 static ERL_NIF_TERM
+to_webp(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
+{
+  const char *from_path = from_elixir_string(env, argv[0]);
+  const char *to_path = from_elixir_string(env, argv[1]);
+  int quality = from_elixir_int(env, argv[2]);
+  int reduction_effort = from_elixir_int(env, argv[3]);
+
+  VipsImage *in;
+  ERL_NIF_TERM res;
+
+  if (assert_dirty_schedulers(env, &res))
+    if (load_vips_image(env, from_path, &in, &res))
+    {
+      if (vips_webpsave(in, to_path, "Q", quality, "reduction_effort", reduction_effort, "strip", TRUE, NULL))
+      {
+        res = elixir_vips_error(env, "convertion_failed", NULL);
+      }
+      else
+      {
+        res = enif_make_atom(env, "ok");
+      }
+      g_object_unref(in);
+    }
+
+  return res;
+}
+
+// ----------------------------------------------------------------------------
+
+static ERL_NIF_TERM
 get_headers(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 {
   char *path = from_elixir_string(env, argv[0]);
@@ -292,6 +322,7 @@ get_poi(ErlNifEnv *env, int argc, const ERL_NIF_TERM argv[])
 
 static ErlNifFunc funcs[] = {
     {"thumbnail", 4, thumbnail, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+    {"to_webp", 4, to_webp, ERL_NIF_DIRTY_JOB_CPU_BOUND},
     {"get_headers", 1, get_headers, ERL_NIF_DIRTY_JOB_IO_BOUND},
     {"get_avg_color", 1, get_avg_color, ERL_NIF_DIRTY_JOB_IO_BOUND},
     {"get_poi", 1, get_poi, ERL_NIF_DIRTY_JOB_CPU_BOUND},
@@ -329,4 +360,4 @@ upgrade(ErlNifEnv *env, void **priv, void **old_priv, ERL_NIF_TERM info)
 
 // ----------------------------------------------------------------------------
 
-ERL_NIF_INIT(Elixir.Vips, funcs, &load, &reload, &upgrade, &unload)
+ERL_NIF_INIT(Elixir.Vips.NIF, funcs, &load, &reload, &upgrade, &unload)

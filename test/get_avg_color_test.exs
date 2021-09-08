@@ -6,7 +6,7 @@ defmodule Vips.GetAvgColorTest do
       Path.join([:code.priv_dir(:vips), "test_medias", "arrival.jpg"])
       |> Vips.get_avg_color()
 
-    assert {:ok, {r, g, b, a}} = res
+    assert {:ok, {_r, _g, _b, _a}} = res
   end
 
   test "jpg grayscale" do
@@ -22,7 +22,7 @@ defmodule Vips.GetAvgColorTest do
       Path.join([:code.priv_dir(:vips), "test_medias", "ps1_logo.png"])
       |> Vips.get_avg_color()
 
-    assert {:ok, {r, g, b, a}} = res
+    assert {:ok, {_r, _g, _b, a}} = res
     # Average should include an alpha value
     assert a < 255
   end

@@ -5,7 +5,7 @@ defmodule Vips.ThumbnailTest do
     from_path = Path.join([:code.priv_dir(:vips), "nowhere"])
     to_path = Briefly.create!(extname: ".jpg")
 
-    res = Vips.thumbnail(from_path, to_path, 100, 100)
+    res = Vips.thumbnail(from: from_path, to: to_path, width: 100, height: 100)
     assert {:error, {:file_not_found, _}} = res
   end
 
@@ -13,7 +13,7 @@ defmodule Vips.ThumbnailTest do
     from_path = Path.join([:code.priv_dir(:vips), "test_medias", "media.bad"])
     to_path = Briefly.create!(extname: ".jpg")
 
-    res = Vips.thumbnail(from_path, to_path, 100, 100)
+    res = Vips.thumbnail(from: from_path, to: to_path, width: 100, height: 100)
     assert {:error, {:bad_input, _}} = res
   end
 
@@ -21,7 +21,7 @@ defmodule Vips.ThumbnailTest do
     from_path = Path.join([:code.priv_dir(:vips), "test_medias", "arrival.jpg"])
     to_path = Briefly.create!()
 
-    res = Vips.thumbnail(from_path, to_path, 100, 100)
+    res = Vips.thumbnail(from: from_path, to: to_path, width: 100, height: 100)
     assert {:error, {:write_to_file_failed, _}} = res
   end
 
@@ -29,7 +29,7 @@ defmodule Vips.ThumbnailTest do
     from_path = Path.join([:code.priv_dir(:vips), "test_medias", "arrival.jpg"])
     to_path = Briefly.create!(extname: ".jpg")
 
-    res = Vips.thumbnail(from_path, to_path, 100, 100)
+    res = Vips.thumbnail(from: from_path, to: to_path, width: 100, height: 100)
     assert res == :ok
   end
 
@@ -37,7 +37,7 @@ defmodule Vips.ThumbnailTest do
     from_path = Path.join([:code.priv_dir(:vips), "test_medias", "arrival.jpg"])
     to_path = Briefly.create!(extname: ".jpg")
 
-    Vips.thumbnail(from_path, to_path, 100, 100)
+    Vips.thumbnail(from: from_path, to: to_path, width: 100, height: 100)
     res = Vips.get_headers(to_path)
     assert {:ok, %{height: 66, width: 100}} = res
   end

@@ -1,0 +1,9 @@
+{
+  "files.associations": {
+    "*.arb": "json",
+    "Fastfile": "ruby",
+    "Appfile": "ruby",
+    "*.moor": "sql",
+    "vips.h": "c"
+  }
+}

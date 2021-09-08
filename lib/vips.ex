@@ -1,28 +1,50 @@
 defmodule Vips do
-  @on_load :init
+  alias Vips.NIF
 
-  def init do
-    path = Path.join([:code.priv_dir(:vips), "vips"])
-    :ok = :erlang.load_nif(path, 0)
+  defmodule ImageHeaders do
+    @type t :: %__MODULE__{
+            width: integer(),
+            height: integer()
+          }
+    defstruct [:width, :height]
   end
 
-  def thumbnail(from: from, to: to, width: width, height: height) do
-    thumbnail(from, to, width, height)
+  @spec thumbnail(
+          from: String.t(),
+          to: String.t(),
+          width: integer,
+          height: integer
+        ) :: :ok | any
+  def thumbnail(opts \\ []) do
+    NIF.thumbnail(
+      opts[:from],
+      opts[:to],
+      opts[:width],
+      opts[:height]
+    )
   end
 
-  def thumbnail(_from, _to, _width, _height) do
-    raise "NIF thumbnail/4 not implemented"
+  @spec to_webp(
+          from: String.t(),
+          to: String.t(),
+          quality: integer,
+          reduction_effort: integer
+        ) :: :ok | any
+  def to_webp(opts \\ []) do
+    NIF.to_webp(
+      opts[:from],
+      opts[:to],
+      Keyword.get(opts, :quality, 80),
+      Keyword.get(opts, :reduction_effort, 2)
+    )
   end
 
-  def get_headers(_from) do
-    raise "NIF get_headers/1 not implemented"
-  end
+  @spec get_headers(String.t()) :: {:ok, ImageHeaders.t()} | any
+  def get_headers(from), do: NIF.get_headers(from)
 
-  def get_avg_color(_from) do
-    raise "NIF get_avg_color/1 not implemented"
-  end
+  @spec get_avg_color(String.t()) :: :ok | any
+  def get_avg_color(from), do: NIF.get_avg_color(from)
 
-  def get_poi(_from) do
-    raise "NIF get_poi/1 not implemented"
-  end
+  @spec get_poi(String.t()) :: :ok | any
+  def get_poi(from), do: NIF.get_poi(from)
 end
